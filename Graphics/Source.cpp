@@ -8,27 +8,12 @@
 #include <chrono>
 #include <SOIL.h>
 #include <Windows.h>
+#include "Camera.h";
 using namespace std;
-//Create Texture from an image file
-GLuint loadTexture(const GLchar* path)
-{
-    GLuint texture;
-    glGenTextures(1, &texture);
-
-    int width, height;
-    unsigned char* image;
-
-    glBindTexture(GL_TEXTURE_2D, texture);
-    image = SOIL_load_image(path, &width, &height, 0, SOIL_LOAD_RGB);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    SOIL_free_image_data(image);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    return texture;
+#pragma region Funcs
+void CameraCallback(GLFWwindow* window, double xpos, double ypos) {
+    Camera* cam = static_cast<Camera*>(glfwGetWindowUserPointer(window));
+    if (cam) cam->mouse_callback(window, xpos, ypos);
 }
 //Set pointers to vertex attributes in the shader to be changed and used in rendering the scene
 void specifySceneVertexAttributes(GLuint shaderProgram)
@@ -58,7 +43,7 @@ void specifyScreenVertexAttributes(GLuint shaderProgram)
     glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
 }
 
-void createShaderProgram(const GLchar* vertSrc, const GLchar* fragSrc, GLuint& vertexShader, GLuint& fragmentShader,GLuint& shaderProgram)
+void createShaderProgram(const GLchar* vertSrc, const GLchar* fragSrc, GLuint& vertexShader, GLuint& fragmentShader, GLuint& shaderProgram)
 {
     // Create and compile the vertex shader
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -78,79 +63,19 @@ void createShaderProgram(const GLchar* vertSrc, const GLchar* fragSrc, GLuint& v
     glLinkProgram(shaderProgram);
 }
 
-void createShaderProgram( GLuint& gridVertex, GLuint& gridFrag, GLuint& shaderProgram)
+void createShaderProgram(GLuint& gridVertex, GLuint& gridFrag, GLuint& shaderProgram)
 {
     // Link the vertex and fragment shader into a shader program
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, gridVertex);
     glAttachShader(shaderProgram, gridFrag);
-	glLinkProgram(shaderProgram);
+    glLinkProgram(shaderProgram);
     glBindFragDataLocation(shaderProgram, 0, "outColor");
     glLinkProgram(shaderProgram);
 }
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
-
-glm::vec3 cameraPos = glm::vec3(1.0f, 1.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-glm::vec3 direction;
-bool firstMouse = true;
-float lastX = 0;
-float lastY = 0;
-float yaw = 180;
-float pitch = 0;
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (firstMouse)
-    {
-        cameraFront = glm::normalize(glm::vec3(0.0f, 0.0f, 0.0f) - cameraPos);
-        lastX = xpos;
-        lastY = ypos;
-        yaw = glm::degrees(atan2(cameraFront.z, cameraFront.x)) - 90.0f;
-        pitch = glm::degrees(asin(cameraFront.y));
-		direction = cameraFront;
-        firstMouse = false;
-        return;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
-
-
-}
-void processInput(GLFWwindow* window)
-{
-
-    float cameraSpeed = 2.5f * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-}
+#pragma region Shaders
 
 //Handles attributes as they appear in the vertex array, positions, and 3d Transformations
 //Model matrix: position of model to real world
@@ -302,58 +227,8 @@ const GLchar* screenVertexSource = R"glsl(
             gl_Position = vec4(position, 0.0, 1.0);
         }
     )glsl";
-// Cube vertices
-GLfloat cubeVertices[] = {
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-
-    -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-     1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-     1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-     1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-    -1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-    -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
-};
-
+#pragma endregion Shaders
+#pragma region Vertices
 // Quad vertices
 GLfloat quadVertices[] = {
     -1.0f,  1.0f,  0.0f, 1.0f,
@@ -373,10 +248,8 @@ float groundVertices[] = {
      5000.0f, 0.0f,  5000.0f,
     -5000.0f, 0.0f,  5000.0f
 };
-
+#pragma endregion Vertices
 int main() {
-    auto t_start = std::chrono::high_resolution_clock::now();
-
     // Initialize GLFW
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
@@ -406,39 +279,35 @@ int main() {
         return -1;
     }
 
-	//Depth tests are good for removing objects behind other objects, Stencil tests are good for outlining objects/shapes to make mirrors, windows, and masking models
-	//Tests Depths to make sure not overlapping objects are drawn
+    //Depth tests are good for removing objects behind other objects, Stenci tests are good for outlining objects/shapes to make mirrors, windows, and masking models
+    //Tests Depths to make sure not overlapping objects are drawn
     glEnable(GL_DEPTH_TEST);
-	//Stencil buffer makes a map of zeros and draws objects changing the values of the map to one determined on the drawn model
+    //Stencil buffer makes a map of zeros and draws objects changing the values of the map to one determined on the drawn model
     glEnable(GL_STENCIL_TEST);
     // Create some primitive
 
 
-         
+
     //Unsigned int elements referring to vertices bound to GL_ARRAY_BUFFER if we want to draw them in order
     GLuint elements[] = {
         0, 1, 2,
         2, 3, 0
-	};  
-// Create VAOsGLint success;
+    };
+    // Create VAOsGLint success;
 
-    GLuint vaoCube, vaoQuad;
-    glGenVertexArrays(1, &vaoCube);
+    GLuint vaoQuad;
     glGenVertexArrays(1, &vaoQuad);
-// Create Vertix Buffer Objects (VBOs)
-    GLuint vboCube, vboQuad;
-    glGenBuffers(1, &vboCube);
+    // Create Vertix Buffer Objects (VBOs)
+    GLuint vboQuad;
     glGenBuffers(1, &vboQuad);
-// Create shader programs
+    // Create shader programs
     GLuint sceneVertexShader, sceneFragmentShader, sceneShaderProgram, gridShaderProgram, gridVertexShader, gridFragmentShader;
 
     GLuint screenVertexShader, screenFragmentShader, screenShaderProgram;
     createShaderProgram(screenVertexSource, screenFragmentSource, screenVertexShader, screenFragmentShader, screenShaderProgram);
     createShaderProgram(sceneVertexSource, sceneFragmentSource, sceneVertexShader, sceneFragmentShader, sceneShaderProgram);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vboCube);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-// Create grid shaders
+    // Create grid shaders
     gridVertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(gridVertexShader, 1, &sceneGridLinesVertexSource, NULL);
     glCompileShader(gridVertexShader);
@@ -446,22 +315,18 @@ int main() {
     gridFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(gridFragmentShader, 1, &sceneGridLinesFragmentSource, NULL);
     glCompileShader(gridFragmentShader);
-    
+
     createShaderProgram(gridVertexShader, gridFragmentShader, gridShaderProgram);
-    
+
     glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
- 
-// Specify the layout of the vertex data
-    glBindVertexArray(vaoCube);
-    glBindBuffer(GL_ARRAY_BUFFER, vboCube);
-    specifySceneVertexAttributes(sceneShaderProgram);
+
 
     glBindVertexArray(vaoQuad);
     glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
     specifyScreenVertexAttributes(screenShaderProgram);
 
-// Create grid VAO and VBO
+    // Create grid VAO and VBO
     unsigned int gridVAO, gridVBO;
     glGenVertexArrays(1, &gridVAO);
     glGenBuffers(1, &gridVBO);
@@ -476,24 +341,8 @@ int main() {
 
     glBindVertexArray(0); // unbind
 
-   
-    GLuint texKitten = loadTexture("textures/cat.png");
-    GLuint texPuppy = loadTexture("textures/puppy.png");
 
-    glUseProgram(sceneShaderProgram);
-    glUniform1i(glGetUniformLocation(sceneShaderProgram, "texKitten"), 0);
-    glUniform1i(glGetUniformLocation(sceneShaderProgram, "texPuppy"), 1);
 
-    glUseProgram(screenShaderProgram);
-    glUniform1i(glGetUniformLocation(screenShaderProgram, "texFramebuffer"), 0);
-
-    GLint posAttrib = glGetAttribLocation(screenShaderProgram, "position");
-    if (posAttrib != -1) {
-        glEnableVertexAttribArray(posAttrib);
-        glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)0);
-    }
-
-    GLint uniModel = glGetUniformLocation(sceneShaderProgram, "model");
 
     // Create framebuffer
     GLuint frameBuffer;
@@ -519,20 +368,13 @@ int main() {
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepthStencil);
 
-    // Set up projection
-	glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-	//Gram-Schmidt process to find the right and up vectors of the camera
-	//By creating a 3x3 matrix with the forward, right, and up vectors as columns, we can dfine a 4th axes to add translation and scaling
-	glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
-	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-	glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
-   
-    
+
+
+
     glUseProgram(sceneShaderProgram);
 
 
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 1.0f, 10.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 20000.0f);
     GLint uniProj = glGetUniformLocation(sceneShaderProgram, "proj");
     glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
@@ -541,18 +383,17 @@ int main() {
     glUseProgram(screenShaderProgram);
     GLint selection = glGetUniformLocation(screenShaderProgram, "selector");
     int curSelector = 0;
-	glUniform1i(selection, curSelector);
+    glUniform1i(selection, curSelector);
     GLenum e = glGetError();
     if (e != GL_NO_ERROR) std::cerr << "GL error after uniform1i: " << e << std::endl;
-    
-    GLint uniView = glGetUniformLocation(sceneShaderProgram, "view");
-        cameraFront = glm::normalize(glm::vec3(0.0f, 0.0f, 0.0f) - cameraPos);
-        yaw = glm::degrees(atan2(cameraFront.z, cameraFront.x)) - 90.0f;
-        pitch = glm::degrees(asin(cameraFront.y));
-        glfwSetCursorPosCallback(window, mouse_callback);
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    while (!glfwWindowShouldClose(window)) {        
+    GLint uniView = glGetUniformLocation(sceneShaderProgram, "view");
+    Camera cam = Camera(window);
+    cam.SetCamera(window); // keep your initialization
+    // store pointer for callback
+    glfwSetWindowUserPointer(window, &cam);
+    glfwSetCursorPosCallback(window, CameraCallback);
+    while (!glfwWindowShouldClose(window)) {
         glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
         glEnable(GL_DEPTH_TEST);
 
@@ -560,9 +401,9 @@ int main() {
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        glBindVertexArray(vaoCube);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glUseProgram(sceneShaderProgram);
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) curSelector = 1;
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) curSelector = 2;
@@ -570,77 +411,33 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) curSelector = 4;
         if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) curSelector = 0;
 
-		processInput(window);
-        glm::mat4 view;
-	    float radius = 10.0f;
-        float camX = sin(glfwGetTime() * radius);
-	    float camZ = cos(glfwGetTime() * radius);
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-	    glUniformMatrix4fv(uniView, 1, GL_FALSE, glm::value_ptr(view));
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texKitten);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texPuppy);
+        cam.CameraUpdate(window, deltaTime, sceneShaderProgram);
 
-        // Clear the screen to white
-
-        // Calculate transformation
-        auto t_now = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(
-            model,
-            time * glm::radians(180.0f),
-            glm::vec3(0.0f, 0.0f, 1.0f)
-        );
-        glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
-
-        // Draw cube
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        glEnable(GL_STENCIL_TEST);
-
-        // Draw floor
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        glStencilMask(0xFF);
-        glDepthMask(GL_FALSE);
-        glClear(GL_STENCIL_BUFFER_BIT);
-
-        glDrawArrays(GL_TRIANGLES, 36, 6);
-
-        // Draw cube reflection
-        glStencilFunc(GL_EQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDepthMask(GL_TRUE);
-
-
-        model = glm::scale(glm::translate(model, glm::vec3(0, 0, -1)), glm::vec3(1, 1, -1));
-        glUniformMatrix4fv(uniModel, 1, GL_FALSE, glm::value_ptr(model));
-
-        glUniform3f(uniColor, 0.3f, 0.3f, 0.3f);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glUniform3f(uniColor, 1.0f, 1.0f, 1.0f);
-
-    //Draw Grid
-            glUseProgram(gridShaderProgram);
-
-            // set uniforms
-
-            glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-            glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
         
-            glm::mat4 gridModel = glm::mat4(6.0f);
-            glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(gridModel));
+        glm::mat4 model = glm::mat4(1.0f);
+
+        //Draw Grid
+        glUseProgram(gridShaderProgram);
+
+        glm::mat4 view = cam.GetViewMatrix(); // or however your Camera exposes it
+        glUseProgram(gridShaderProgram);
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
+        // set uniforms
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
 
-            // draw grid quad
-            glDisable(GL_STENCIL_TEST);
-            glBindVertexArray(gridVAO);
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-            glBindVertexArray(0);
+        glm::mat4 gridModel = glm::mat4(6.0f);
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(gridModel));
+
+
+        // draw grid quad
+        glDisable(GL_STENCIL_TEST);
+        glBindVertexArray(gridVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
 
 
 
@@ -654,7 +451,7 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texColorBuffer);
 
         glUseProgram(screenShaderProgram);
-        glUniform1i(selection, curSelector);GLint ok;
+        glUniform1i(selection, curSelector); GLint ok;
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glGetProgramiv(screenFragmentShader, GL_LINK_STATUS, &ok);
         if (!ok) {
@@ -671,9 +468,6 @@ int main() {
     glDeleteTextures(1, &texColorBuffer);
     glDeleteFramebuffers(1, &frameBuffer);
 
-    glDeleteTextures(1, &texKitten);
-    glDeleteTextures(1, &texPuppy);
-
     glDeleteProgram(screenShaderProgram);
     glDeleteShader(screenFragmentShader);
     glDeleteShader(screenVertexShader);
@@ -684,10 +478,8 @@ int main() {
     glDeleteShader(gridVertexShader);
     glDeleteShader(gridFragmentShader);
 
-    glDeleteBuffers(1, &vboCube);
     glDeleteBuffers(1, &vboQuad);
 
-    glDeleteVertexArrays(1, &vaoCube);
     glDeleteVertexArrays(1, &vaoQuad);
 
     glfwDestroyWindow(window);
@@ -695,7 +487,7 @@ int main() {
     return 0;
 }
 /*
-* 
+*
 1) Headers
     Include headers for OpenGL, GLFW, GLEW, GLM, SOIL, and Windows.
 2) Initialization
@@ -703,7 +495,7 @@ int main() {
     Initialize GLFW and request an OpenGL 3.3 core profile context
         Create a window and make its OpenGL context current
     Initialize GLEW for OpenGL extension management
-    
+
     Enable depth testing (GL_DEPTH_TEST) and stencil testing (GL_STENCIL_TEST
 3) Vertex Data
    Define vertex data for a cube and a floor (position, color, texture coordinates
@@ -712,7 +504,7 @@ int main() {
  (element buffer object), bind it, and upload element indices (not used in drawing).
 4) Shaders
     Write and compile our vertex shaders (handles positions, colors, and matrices).
-		For scene vs. screen, and from various objects (grid lines) to our cubes shaders
+        For scene vs. screen, and from various objects (grid lines) to our cubes shaders
     Write and compile our fragment shaders (mixes two textures and outputs color).
         same as above
     Link shaders into a shader program and check for errors.

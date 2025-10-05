@@ -13,22 +13,40 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Renderer">
+      <UniqueIdentifier>{0731c5a4-c23b-48d7-b534-dc50b5d25c4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Shaders">
+      <UniqueIdentifier>{074e3e38-640d-4ff9-a4d4-ca7fd945aa45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Models">
+      <UniqueIdentifier>{fec30aaf-4617-4e64-98df-2913c1fd697b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer\Camera">
+      <UniqueIdentifier>{36d20c49-93c6-44a2-94e4-07b768b4a3ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Scene">
+      <UniqueIdentifier>{9c5d5dd7-209e-45fe-9252-700a59a1d478}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Util">
+      <UniqueIdentifier>{84958f27-02bb-439f-9b21-cb402d3092d1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\SOIL.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\stb_image_aug.c">
+      <Filter>Source Files\Util</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\image_DXT.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\SOIL.c">
+      <Filter>Source Files\Util</Filter>
     </ClCompile>
     <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\image_helper.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Util</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\stb_image_aug.c">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\image_DXT.c">
+      <Filter>Source Files\Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -49,6 +67,9 @@
     </ClInclude>
     <ClInclude Include="C:\Users\14025\Downloads\soil-master\soil-master\inc\SOIL\stbi_DDS_aug_c.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Source Files\Renderer\Camera</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
