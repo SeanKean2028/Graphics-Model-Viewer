@@ -129,11 +129,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\image_DXT.c" />
-    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\image_helper.c" />
-    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\SOIL.c" />
-    <ClCompile Include="C:\Users\14025\Downloads\soil-master\soil-master\src\stb_image_aug.c" />
+    <ClCompile Include="image_DXT.c" />
+    <ClCompile Include="image_helper.c" />
+    <ClCompile Include="SOIL.c" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="stb_image_aug.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\Users\14025\Downloads\soil-master\soil-master\inc\SOIL\image_DXT.h" />
