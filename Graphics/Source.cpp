@@ -8,6 +8,10 @@
 #include <chrono>
 #include <SOIL.h>
 #include <Windows.h>
+
+//Sean Made Headers
+#include "ShaderObj.h"
+#include "ShaderProgram.h"
 #include "Camera.h";
 using namespace std;
 #pragma region Funcs
@@ -301,22 +305,24 @@ int main() {
     GLuint vboQuad;
     glGenBuffers(1, &vboQuad);
     // Create shader programs
-    GLuint sceneVertexShader, sceneFragmentShader, sceneShaderProgram, gridShaderProgram, gridVertexShader, gridFragmentShader;
+    
+    //Scene
+    VertexShader sceneVertexShader = VertexShader("GLSLs/sceneVertexSource.glsl", GL_VERTEX_SHADER);
+    FragmentShader sceneFragmentShader = FragmentShader("GLSLs/sceneFragmentSource.glsl", GL_FRAGMENT_SHADER);
+    
+    //Screen pp
+    VertexShader screenVertexShader = VertexShader("GLSLs/screenVertexSource.glsl", GL_VERTEX_SHADER);
+    FragmentShader screenFragmentShader = FragmentShader("GLSLs/screenFragmentSource.glsl", GL_FRAGMENT_SHADER);
 
-    GLuint screenVertexShader, screenFragmentShader, screenShaderProgram;
-    createShaderProgram(screenVertexSource, screenFragmentSource, screenVertexShader, screenFragmentShader, screenShaderProgram);
-    createShaderProgram(sceneVertexSource, sceneFragmentSource, sceneVertexShader, sceneFragmentShader, sceneShaderProgram);
+    //Grid system
+    VertexShader gridVertexShader = VertexShader("GLSLs/GridVertex.glsl", GL_VERTEX_SHADER);
+    FragmentShader gridFragmentShader = FragmentShader("GLSLs/GridFragment.glsl", GL_FRAGMENT_SHADER);
+    
+    //Create all shader programs
+    ShaderProgram sceneShaderProgram = ShaderProgram(sceneVertexShader, sceneFragmentShader);
+    ShaderProgram screenShaderProgram = ShaderProgram(screenVertexShader, screenFragmentShader);
+    ShaderProgram gridShaderProgram = ShaderProgram(gridVertexShader, gridFragmentShader);
 
-    // Create grid shaders
-    gridVertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(gridVertexShader, 1, &sceneGridLinesVertexSource, NULL);
-    glCompileShader(gridVertexShader);
-
-    gridFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(gridFragmentShader, 1, &sceneGridLinesFragmentSource, NULL);
-    glCompileShader(gridFragmentShader);
-
-    createShaderProgram(gridVertexShader, gridFragmentShader, gridShaderProgram);
 
     glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
@@ -324,7 +330,7 @@ int main() {
 
     glBindVertexArray(vaoQuad);
     glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
-    specifyScreenVertexAttributes(screenShaderProgram);
+    specifyScreenVertexAttributes(screenShaderProgram.ID);
 
     // Create grid VAO and VBO
     unsigned int gridVAO, gridVBO;
@@ -371,23 +377,23 @@ int main() {
 
 
 
-    glUseProgram(sceneShaderProgram);
+    glUseProgram(sceneShaderProgram.ID);
 
 
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 20000.0f);
-    GLint uniProj = glGetUniformLocation(sceneShaderProgram, "proj");
+    GLint uniProj = glGetUniformLocation(sceneShaderProgram.ID, "proj");
     glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
 
-    GLint uniColor = glGetUniformLocation(sceneShaderProgram, "overrideColor");
+    GLint uniColor = glGetUniformLocation(sceneShaderProgram.ID, "overrideColor");
 
-    glUseProgram(screenShaderProgram);
-    GLint selection = glGetUniformLocation(screenShaderProgram, "selector");
+    glUseProgram(sceneShaderProgram.ID);
+    GLint selection = glGetUniformLocation(sceneShaderProgram.ID, "selector");
     int curSelector = 0;
     glUniform1i(selection, curSelector);
     GLenum e = glGetError();
     if (e != GL_NO_ERROR) std::cerr << "GL error after uniform1i: " << e << std::endl;
 
-    GLint uniView = glGetUniformLocation(sceneShaderProgram, "view");
+    GLint uniView = glGetUniformLocation(sceneShaderProgram.ID, "view");
     Camera cam = Camera(window);
     cam.SetCamera(window); // keep your initialization
     // store pointer for callback
@@ -404,33 +410,33 @@ int main() {
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(sceneShaderProgram);
+        glUseProgram(sceneShaderProgram.ID);
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) curSelector = 1;
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) curSelector = 2;
         if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) curSelector = 3;
         if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) curSelector = 4;
         if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) curSelector = 0;
 
-        cam.CameraUpdate(window, deltaTime, sceneShaderProgram);
+        cam.CameraUpdate(window, deltaTime, sceneShaderProgram.ID);
 
 
         
         glm::mat4 model = glm::mat4(1.0f);
 
         //Draw Grid
-        glUseProgram(gridShaderProgram);
+        glUseProgram(gridShaderProgram.ID);
 
         glm::mat4 view = cam.GetViewMatrix(); // or however your Camera exposes it
-        glUseProgram(gridShaderProgram);
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
+        glUseProgram(gridShaderProgram.ID);
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
         // set uniforms
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
 
         glm::mat4 gridModel = glm::mat4(6.0f);
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(gridModel));
+        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(gridModel));
 
 
         // draw grid quad
@@ -445,17 +451,17 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindVertexArray(vaoQuad);
         glDisable(GL_DEPTH_TEST);
-        glUseProgram(screenShaderProgram);
+        glUseProgram(screenShaderProgram.ID);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texColorBuffer);
 
-        glUseProgram(screenShaderProgram);
+        glUseProgram(screenShaderProgram.ID);
         glUniform1i(selection, curSelector); GLint ok;
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glGetProgramiv(screenFragmentShader, GL_LINK_STATUS, &ok);
+        glGetProgramiv(screenFragmentShader.id, GL_LINK_STATUS, &ok);
         if (!ok) {
-            char buf[1024]; glGetProgramInfoLog(screenFragmentShader, 1024, NULL, buf);
+            char buf[1024]; glGetProgramInfoLog(screenFragmentShader.id, 1024, NULL, buf);
             std::cerr << "LINK ERROR: " << buf << std::endl;
         }
 
@@ -468,15 +474,15 @@ int main() {
     glDeleteTextures(1, &texColorBuffer);
     glDeleteFramebuffers(1, &frameBuffer);
 
-    glDeleteProgram(screenShaderProgram);
-    glDeleteShader(screenFragmentShader);
-    glDeleteShader(screenVertexShader);
+    screenShaderProgram.Delete();
+    screenFragmentShader.Delete();
+    screenVertexShader.Delete();
 
-    glDeleteProgram(sceneShaderProgram);
-    glDeleteShader(sceneFragmentShader);
-    glDeleteShader(sceneVertexShader);
-    glDeleteShader(gridVertexShader);
-    glDeleteShader(gridFragmentShader);
+    sceneShaderProgram.Delete();
+    sceneFragmentShader.Delete();
+    sceneVertexShader.Delete();
+    gridVertexShader.Delete();
+    gridFragmentShader.Delete();
 
     glDeleteBuffers(1, &vboQuad);
 

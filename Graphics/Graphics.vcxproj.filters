@@ -71,5 +71,14 @@
     <ClInclude Include="Camera.h">
       <Filter>Source Files\Renderer\Camera</Filter>
     </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderProgram.h">
+      <Filter>Source Files\Renderer\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderObj.h">
+      <Filter>Source Files\Renderer\Shaders</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
