@@ -19,64 +19,7 @@ void CameraCallback(GLFWwindow* window, double xpos, double ypos) {
     Camera* cam = static_cast<Camera*>(glfwGetWindowUserPointer(window));
     if (cam) cam->mouse_callback(window, xpos, ypos);
 }
-//Set pointers to vertex attributes in the shader to be changed and used in rendering the scene
-void specifySceneVertexAttributes(GLuint shaderProgram)
-{
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), 0);
 
-    GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-    glEnableVertexAttribArray(colAttrib);
-    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-
-    GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
-    glEnableVertexAttribArray(texAttrib);
-    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)(6 * sizeof(GLfloat)));
-}
-
-// Set pointers to vertex attributes in the shader to be changed and used in rendering the screen
-void specifyScreenVertexAttributes(GLuint shaderProgram)
-{
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), 0);
-
-    GLint texAttrib = glGetAttribLocation(shaderProgram, "texcoord");
-    glEnableVertexAttribArray(texAttrib);
-    glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
-}
-
-void createShaderProgram(const GLchar* vertSrc, const GLchar* fragSrc, GLuint& vertexShader, GLuint& fragmentShader, GLuint& shaderProgram)
-{
-    // Create and compile the vertex shader
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertSrc, NULL);
-    glCompileShader(vertexShader);
-
-    // Create and compile the fragment shader
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragSrc, NULL);
-    glCompileShader(fragmentShader);
-
-    // Link the vertex and fragment shader into a shader program
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glBindFragDataLocation(shaderProgram, 0, "outColor");
-    glLinkProgram(shaderProgram);
-}
-
-void createShaderProgram(GLuint& gridVertex, GLuint& gridFrag, GLuint& shaderProgram)
-{
-    // Link the vertex and fragment shader into a shader program
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, gridVertex);
-    glAttachShader(shaderProgram, gridFrag);
-    glLinkProgram(shaderProgram);
-    glBindFragDataLocation(shaderProgram, 0, "outColor");
-    glLinkProgram(shaderProgram);
-}
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 #pragma region Shaders
@@ -85,152 +28,11 @@ float lastFrame = 0.0f; // Time of last frame
 //Model matrix: position of model to real world
 //View matrix: position of camera to real world
 //Order matters in matrix multiplication! Projection looks at the view matrix which looks at the model matrix
-//Projection matrix: 3D to 2D Razterization
-const GLchar* sceneVertexSource = R"glsl(
-        #version 330 core
-        in vec3 position;
-        in vec3 color;
-        in vec2 texcoord;
-        
-        out vec3 Color;
-        out vec2 Texcoord;    
 
-        uniform vec3 overrideColor;
-        uniform mat4 model;
-        uniform mat4 view;
-        uniform mat4 proj;
-        void main(){
-            Color = overrideColor * color;
-            Texcoord = texcoord;
-            gl_Position = proj * view *  model * vec4(position, 1.0);
-        }
-    )glsl";
 //Handles coloring of pixels using glsl
 //sampler2D = texture, samples at certain points based on mix func. which linearly interpolates between two values based on a third value
 //Fragment shader commonly used in post processing effects  
-const GLchar* sceneFragmentSource = R"glsl(
-        #version 330 core
-        in vec3 Color;
-        uniform float time;
-        out vec4 outColor;
-        uniform int selector;
 
-        uniform sampler2D texKitten;
-        uniform sampler2D texPuppy;
-
-        in vec2 Texcoord;
-        
-
-
-        void main() {
-            vec4 colKitten = texture(texKitten, Texcoord);
-            vec4 colPuppy = texture(texPuppy, Texcoord);
-            outColor = vec4(Color, 1.0) * mix(texture(texKitten, Texcoord),texture(texPuppy, Texcoord), 0.5);
-        }
-    )glsl";
-const GLchar* sceneGridLinesFragmentSource = R"glsl(
-        #version 330 core
-        in vec3 FragPos;
-        out vec4 FragColor;
-
-        void main()
-        {
-            float lineWidth = 0.02; // thickness
-            float gridSpacing = 1.0;
-
-            // repeat space
-            float x = abs(mod(FragPos.x, gridSpacing));
-            float z = abs(mod(FragPos.z, gridSpacing));
-
-            // near the grid line → dark
-            if (x < lineWidth || z < lineWidth)
-                FragColor = vec4(0.3, 0.3, 0.3, 1.0);
-            else
-                discard; // or background color
-        }
-    )glsl";
-const GLchar* sceneGridLinesVertexSource = R"glsl(
-        #version 330 core
-        layout (location = 0) in vec3 aPos;
-
-        uniform mat4 model;
-        uniform mat4 view;
-        uniform mat4 projection;
-
-        out vec3 FragPos;
-
-        void main()
-        {
-            vec4 worldPos = model * vec4(aPos, 1.0);
-            FragPos = worldPos.xyz;
-            gl_Position = projection * view * worldPos;
-        }
-    )glsl";
-const GLchar* screenFragmentSource = R"glsl(
-        #version 330 core
-        in vec2 Texcoord;
-        out vec4 outColor;
-        uniform sampler2D texFramebuffer;
-        uniform int selector;
-        
-        const float blurSizeH = 1.0 / 300.0;
-        const float blurSizeV = 1.0 / 200.0;
-
-        void main()
-        {
-            if (selector == 1) {
-                // Inverse Color
-                outColor = vec4(1.0) - texture(texFramebuffer, Texcoord);
-            } 
-            else if (selector == 2) {
-                // Greyscale
-                vec4 c = texture(texFramebuffer, Texcoord);
-                float avg = (c.r + c.g + c.b) / 3.0;
-                outColor = vec4(avg, avg, avg, 1.0);
-            } 
-            else if (selector == 3) {
-                // Simple blur
-                vec4 sum = vec4(0.0);
-                for (int y = -4; y <= 4; ++y) {
-                    for (int x = -4; x <= 4; ++x) {
-                        sum += texture(texFramebuffer,
-                                       Texcoord + vec2(float(x) * blurSizeH,
-                                                       float(y) * blurSizeV));
-                    }
-                }
-                outColor = sum / (9.0 * 9.0);
-            } 
-            else if (selector == 4) {
-                // Edge detection (Sobel-like)
-                vec4 top = texture(texFramebuffer, Texcoord + vec2(0.0,  blurSizeV));
-                vec4 bottom = texture(texFramebuffer, Texcoord + vec2(0.0, -blurSizeV));
-                vec4 left = texture(texFramebuffer, Texcoord + vec2(-blurSizeH, 0.0));
-                vec4 right = texture(texFramebuffer, Texcoord + vec2( blurSizeH, 0.0));
-                vec4 topLeft = texture(texFramebuffer, Texcoord + vec2(-blurSizeH,  blurSizeV));
-                vec4 topRight = texture(texFramebuffer, Texcoord + vec2( blurSizeH,  blurSizeV));
-                vec4 bottomLeft = texture(texFramebuffer, Texcoord + vec2(-blurSizeH, -blurSizeV));
-                vec4 bottomRight = texture(texFramebuffer, Texcoord + vec2( blurSizeH, -blurSizeV));
-                vec4 sx = -topLeft - 2.0 * left - bottomLeft + topRight + 2.0 * right + bottomRight;
-                vec4 sy = -topLeft - 2.0 * top - topRight + bottomLeft + 2.0 * bottom + bottomRight;
-                outColor = sqrt(sx * sx + sy * sy);
-            } 
-            else {
-                // Default: just pass through
-                outColor = texture(texFramebuffer, Texcoord);
-            }
-        }
-)glsl";
-const GLchar* screenVertexSource = R"glsl(
-        #version 330 core
-        in vec2 position;
-        in vec2 texcoord;
-        out vec2 Texcoord;
-        void main()
-        {
-            Texcoord = texcoord;
-            gl_Position = vec4(position, 0.0, 1.0);
-        }
-    )glsl";
 #pragma endregion Shaders
 #pragma region Vertices
 // Quad vertices
@@ -254,239 +56,152 @@ float groundVertices[] = {
 };
 #pragma endregion Vertices
 int main() {
-    // Initialize GLFW
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW\n";
-        return -1;
-    }
-
-    // Ask for OpenGL 3.3 Core Profile (common baseline)
+    // --- GLFW Initialization ---
+    if (!glfwInit()) { cerr << "Failed to initialize GLFW\n"; return -1; }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Create a window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "GLEW + GLFW Test", nullptr, nullptr);
-    if (!window) {
-        std::cerr << "Failed to create GLFW window\n";
-        glfwTerminate();
-        return -1;
-    }
-
-    // Make context current before using GLEW
+    GLFWwindow* window = glfwCreateWindow(800, 600, "ShaderProgram Test", nullptr, nullptr);
+    if (!window) { cerr << "Failed to create GLFW window\n"; glfwTerminate(); return -1; }
     glfwMakeContextCurrent(window);
 
-    // Initialize GLEW
-    glewExperimental = GL_TRUE; // Needed for core profile
-    if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to initialize GLEW\n";
-        return -1;
-    }
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK) { cerr << "Failed to initialize GLEW\n"; return -1; }
 
-    //Depth tests are good for removing objects behind other objects, Stenci tests are good for outlining objects/shapes to make mirrors, windows, and masking models
-    //Tests Depths to make sure not overlapping objects are drawn
     glEnable(GL_DEPTH_TEST);
-    //Stencil buffer makes a map of zeros and draws objects changing the values of the map to one determined on the drawn model
     glEnable(GL_STENCIL_TEST);
-    // Create some primitive
 
+    // --- Camera ---
+    Camera cam(window);
+    cam.SetCamera(window);
+    glfwSetWindowUserPointer(window, &cam);
+    glfwSetCursorPosCallback(window, CameraCallback);
 
+    // --- Shaders ---
+    VertexShader sceneVert("GLSLs/sceneVertexSource.glsl", GL_VERTEX_SHADER); FragmentShader sceneFrag("GLSLs/sceneFragmentSource.glsl", GL_FRAGMENT_SHADER);
+    ShaderProgram sceneShader(sceneVert, sceneFrag);
 
-    //Unsigned int elements referring to vertices bound to GL_ARRAY_BUFFER if we want to draw them in order
-    GLuint elements[] = {
-        0, 1, 2,
-        2, 3, 0
-    };
-    // Create VAOsGLint success;
+    VertexShader screenVert("GLSLs/screenVertexSource.glsl", GL_VERTEX_SHADER); FragmentShader screenFrag("GLSLs/screenFragmentSource.glsl", GL_FRAGMENT_SHADER);
+    ShaderProgram screenShader(screenVert, screenFrag);
 
-    GLuint vaoQuad;
-    glGenVertexArrays(1, &vaoQuad);
-    // Create Vertix Buffer Objects (VBOs)
-    GLuint vboQuad;
-    glGenBuffers(1, &vboQuad);
-    // Create shader programs
-    
-    //Scene
-    VertexShader sceneVertexShader = VertexShader("GLSLs/sceneVertexSource.glsl", GL_VERTEX_SHADER);
-    FragmentShader sceneFragmentShader = FragmentShader("GLSLs/sceneFragmentSource.glsl", GL_FRAGMENT_SHADER);
-    
-    //Screen pp
-    VertexShader screenVertexShader = VertexShader("GLSLs/screenVertexSource.glsl", GL_VERTEX_SHADER);
-    FragmentShader screenFragmentShader = FragmentShader("GLSLs/screenFragmentSource.glsl", GL_FRAGMENT_SHADER);
+    VertexShader gridVert("GLSLs/GridVertex.glsl", GL_VERTEX_SHADER); FragmentShader gridFrag("GLSLs/GridFragment.glsl", GL_FRAGMENT_SHADER);
+    ShaderProgram gridShader(gridVert, gridFrag);
 
-    //Grid system
-    VertexShader gridVertexShader = VertexShader("GLSLs/GridVertex.glsl", GL_VERTEX_SHADER);
-    FragmentShader gridFragmentShader = FragmentShader("GLSLs/GridFragment.glsl", GL_FRAGMENT_SHADER);
-    
-    //Create all shader programs
-    ShaderProgram sceneShaderProgram = ShaderProgram(sceneVertexShader, sceneFragmentShader);
-    ShaderProgram screenShaderProgram = ShaderProgram(screenVertexShader, screenFragmentShader);
-    ShaderProgram gridShaderProgram = ShaderProgram(gridVertexShader, gridFragmentShader);
-
-
-    glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
+    // --- VAOs/VBOs ---
+    GLuint vaoQuad, vboQuad;
+    glGenVertexArrays(1, &vaoQuad); glGenBuffers(1, &vboQuad);
 
     glBindVertexArray(vaoQuad);
     glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
-    specifyScreenVertexAttributes(screenShaderProgram.ID);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
 
-    // Create grid VAO and VBO
-    unsigned int gridVAO, gridVBO;
-    glGenVertexArrays(1, &gridVAO);
-    glGenBuffers(1, &gridVBO);
+    screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "position", (void*)0);
+    screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "texcoord", (void*)(2 * sizeof(GLfloat)));
+    screenShader.SetAttributePointers();
+    glBindVertexArray(0);
+
+    GLuint gridVAO, gridVBO;
+    glGenVertexArrays(1, &gridVAO); glGenBuffers(1, &gridVBO);
 
     glBindVertexArray(gridVAO);
-
     glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(groundVertices), groundVertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    gridShader.AddAttributePointer(3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), "aPos", (void*)0);
+    gridShader.SetAttributePointers();
+    glBindVertexArray(0);
 
-    glBindVertexArray(0); // unbind
+    // --- Framebuffer for post-processing ---
+    GLuint frameBuffer, texColorBuffer, rboDepthStencil;
+    glGenFramebuffers(1, &frameBuffer); glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
-
-
-
-    // Create framebuffer
-    GLuint frameBuffer;
-    glGenFramebuffers(1, &frameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-
-    // Create texture to hold color buffer
-    GLuint texColorBuffer;
     glGenTextures(1, &texColorBuffer);
     glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
 
-    // Create Renderbuffer Object to hold depth and stencil buffers
-    GLuint rboDepthStencil;
     glGenRenderbuffers(1, &rboDepthStencil);
     glBindRenderbuffer(GL_RENDERBUFFER, rboDepthStencil);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepthStencil);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-
-    glUseProgram(sceneShaderProgram.ID);
-
-
+    // --- Projection ---
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 20000.0f);
-    GLint uniProj = glGetUniformLocation(sceneShaderProgram.ID, "proj");
-    glUniformMatrix4fv(uniProj, 1, GL_FALSE, glm::value_ptr(proj));
+    sceneShader.use(); sceneShader.setMat4("proj", proj);
+    gridShader.use(); gridShader.setMat4("projection", proj);
 
-    GLint uniColor = glGetUniformLocation(sceneShaderProgram.ID, "overrideColor");
-
-    glUseProgram(sceneShaderProgram.ID);
-    GLint selection = glGetUniformLocation(sceneShaderProgram.ID, "selector");
     int curSelector = 0;
-    glUniform1i(selection, curSelector);
-    GLenum e = glGetError();
-    if (e != GL_NO_ERROR) std::cerr << "GL error after uniform1i: " << e << std::endl;
 
-    GLint uniView = glGetUniformLocation(sceneShaderProgram.ID, "view");
-    Camera cam = Camera(window);
-    cam.SetCamera(window); // keep your initialization
-    // store pointer for callback
-    glfwSetWindowUserPointer(window, &cam);
-    glfwSetCursorPosCallback(window, CameraCallback);
+    // ---------------- Main Loop ----------------
     while (!glfwWindowShouldClose(window)) {
-        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-        glEnable(GL_DEPTH_TEST);
-
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glUseProgram(sceneShaderProgram.ID);
+        // --- Handle input ---
+        if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) curSelector = 0;
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) curSelector = 1;
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) curSelector = 2;
         if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) curSelector = 3;
         if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) curSelector = 4;
-        if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) curSelector = 0;
 
-        cam.CameraUpdate(window, deltaTime, sceneShaderProgram.ID);
+        cam.CameraUpdate(window, deltaTime, sceneShader.ID);
 
+        // ---------- Render to framebuffer ----------
+        glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+        glEnable(GL_DEPTH_TEST);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        
-        glm::mat4 model = glm::mat4(1.0f);
+        // --- Draw Grid ---
+        gridShader.use();
+        glm::mat4 view = cam.GetViewMatrix();
+        gridShader.setMat4("view", view);
+        gridShader.setMat4("model", glm::mat4(1.0f));
 
-        //Draw Grid
-        glUseProgram(gridShaderProgram.ID);
-
-        glm::mat4 view = cam.GetViewMatrix(); // or however your Camera exposes it
-        glUseProgram(gridShaderProgram.ID);
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-        // set uniforms
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
-
-
-        glm::mat4 gridModel = glm::mat4(6.0f);
-        glUniformMatrix4fv(glGetUniformLocation(gridShaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(gridModel));
-
-
-        // draw grid quad
-        glDisable(GL_STENCIL_TEST);
         glBindVertexArray(gridVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
 
+        // --- Draw Scene ---
+        sceneShader.use();
+        sceneShader.setMat4("view", view);
+        sceneShader.setMat4("model", glm::mat4(1.0f));
 
+        // Draw your scene objects here...
 
-        // Bind default framebuffer and draw contents of our framebuffer
+        // ---------- Post-processing / Screen Quad ----------
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBindVertexArray(vaoQuad);
         glDisable(GL_DEPTH_TEST);
-        glUseProgram(screenShaderProgram.ID);
 
+        screenShader.use();
+        screenShader.setInt("selector", curSelector);
+
+        glBindVertexArray(vaoQuad);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-
-        glUseProgram(screenShaderProgram.ID);
-        glUniform1i(selection, curSelector); GLint ok;
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glGetProgramiv(screenFragmentShader.id, GL_LINK_STATUS, &ok);
-        if (!ok) {
-            char buf[1024]; glGetProgramInfoLog(screenFragmentShader.id, 1024, NULL, buf);
-            std::cerr << "LINK ERROR: " << buf << std::endl;
-        }
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // Cleanup
+    // ---------------- Cleanup ----------------
     glDeleteRenderbuffers(1, &rboDepthStencil);
     glDeleteTextures(1, &texColorBuffer);
     glDeleteFramebuffers(1, &frameBuffer);
 
-    screenShaderProgram.Delete();
-    screenFragmentShader.Delete();
-    screenVertexShader.Delete();
-
-    sceneShaderProgram.Delete();
-    sceneFragmentShader.Delete();
-    sceneVertexShader.Delete();
-    gridVertexShader.Delete();
-    gridFragmentShader.Delete();
-
     glDeleteBuffers(1, &vboQuad);
-
     glDeleteVertexArrays(1, &vaoQuad);
+
+    glDeleteBuffers(1, &gridVBO);
+    glDeleteVertexArrays(1, &gridVAO);
 
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -40,6 +40,7 @@ class Camera {
         cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
         pitch = 0;
         yaw = 180;
+        
         lastY = 0;
         lastX = 0;
         firstMouse = true;
@@ -62,7 +63,6 @@ class Camera {
         float yoffset = lastY - ypos;
         lastX = xpos;
         lastY = ypos;
-
         float sensitivity = 0.1f;
         xoffset *= sensitivity;
         yoffset *= sensitivity;
