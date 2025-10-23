@@ -48,6 +48,9 @@
     <ClCompile Include="image_DXT.c">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.h">
+      <Filter>Source Files\Renderer\Models</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\Users\14025\Downloads\soil-master\soil-master\inc\SOIL\SOIL.h">

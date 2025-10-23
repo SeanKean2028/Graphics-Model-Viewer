@@ -13,6 +13,7 @@
 #include "ShaderObj.h"
 #include "ShaderProgram.h"
 #include "Camera.h";
+#include "Mesh.h"
 using namespace std;
 #pragma region Funcs
 void CameraCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -22,38 +23,31 @@ void CameraCallback(GLFWwindow* window, double xpos, double ypos) {
 
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
-#pragma region Shaders
-
-//Handles attributes as they appear in the vertex array, positions, and 3d Transformations
-//Model matrix: position of model to real world
-//View matrix: position of camera to real world
-//Order matters in matrix multiplication! Projection looks at the view matrix which looks at the model matrix
-
-//Handles coloring of pixels using glsl
-//sampler2D = texture, samples at certain points based on mix func. which linearly interpolates between two values based on a third value
-//Fragment shader commonly used in post processing effects  
-
-#pragma endregion Shaders
 #pragma region Vertices
 // Quad vertices
 GLfloat quadVertices[] = {
-    -1.0f,  1.0f,  0.0f, 1.0f,
-     1.0f,  1.0f,  1.0f, 1.0f,
-     1.0f, -1.0f,  1.0f, 0.0f,
+    // positions   // texcoords
+    -1.0f,  1.0f,  0.0f, 1.0f, // top-left
+     1.0f,  1.0f,  1.0f, 1.0f, // top-right
+     1.0f, -1.0f,  1.0f, 0.0f, // bottom-right
+    -1.0f, -1.0f,  0.0f, 0.0f  // bottom-left
+};
 
-     1.0f, -1.0f,  1.0f, 0.0f,
-    -1.0f, -1.0f,  0.0f, 0.0f,
-    -1.0f,  1.0f,  0.0f, 1.0f
+GLuint quadIndices[] = {
+    0, 1, 2,  // first triangle
+    0, 2, 3   // second triangle
 };
 float groundVertices[] = {
-    -5000.0f, 0.0f, -5000.0f,
-     5000.0f, 0.0f, -5000.0f,
-     5000.0f, 0.0f,  5000.0f,
+    // positions             // normals        // texcoords
+    -5000.0f, 0.0f, -5000.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,
+     5000.0f, 0.0f, -5000.0f,  0.0f, 1.0f, 0.0f, 100.0f, 0.0f,
+     5000.0f, 0.0f,  5000.0f,  0.0f, 1.0f, 0.0f, 100.0f, 100.0f,
 
-    -5000.0f, 0.0f, -5000.0f,
-     5000.0f, 0.0f,  5000.0f,
-    -5000.0f, 0.0f,  5000.0f
+    -5000.0f, 0.0f, -5000.0f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,
+     5000.0f, 0.0f,  5000.0f,  0.0f, 1.0f, 0.0f, 100.0f, 100.0f,
+    -5000.0f, 0.0f,  5000.0f,  0.0f, 1.0f, 0.0f,   0.0f, 100.0f
 };
+
 #pragma endregion Vertices
 int main() {
     // --- GLFW Initialization ---
@@ -89,33 +83,45 @@ int main() {
     ShaderProgram gridShader(gridVert, gridFrag);
 
     // --- VAOs/VBOs ---
-    GLuint vaoQuad, vboQuad;
-    glGenVertexArrays(1, &vaoQuad); glGenBuffers(1, &vboQuad);
+    GLuint vaoQuad, vboQuad, eboQuad;
+    glGenVertexArrays(1, &vaoQuad);
+    glGenBuffers(1, &vboQuad);
+    glGenBuffers(1, &eboQuad);
 
     glBindVertexArray(vaoQuad);
+
+    // Vertex buffer
     glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
 
+    // Element/index buffer
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboQuad);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
+
+    // Attributes
     screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "position", (void*)0);
     screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "texcoord", (void*)(2 * sizeof(GLfloat)));
     screenShader.SetAttributePointers();
-    glBindVertexArray(0);
 
-    GLuint gridVAO, gridVBO;
-    glGenVertexArrays(1, &gridVAO); glGenBuffers(1, &gridVBO);
+    //Generate Meshes VAO, VBO, and Attribute pointers
+    Mesh gridMesh = Mesh(groundVertices,  8, 6);
+    GLsizei stride = 8 * sizeof(GLfloat);
+    VertexAttribute gridPositionAttribute = VertexAttribute(stride, 3, 0);
+    gridMesh.AddAttributePointer(gridPositionAttribute);
+   
+    VertexAttribute gridNormalAttribute = VertexAttribute(stride, 3, 3);
+    gridMesh.AddAttributePointer(gridNormalAttribute);
 
-    glBindVertexArray(gridVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, gridVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(groundVertices), groundVertices, GL_STATIC_DRAW);
+    VertexAttribute gridTexCoordinateAttribute = VertexAttribute(stride, 3, 6);
+    gridMesh.AddAttributePointer(gridTexCoordinateAttribute);
 
-    gridShader.AddAttributePointer(3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), "aPos", (void*)0);
-    gridShader.SetAttributePointers();
-    glBindVertexArray(0);
+    gridMesh.GenerateMesh();
 
     // --- Framebuffer for post-processing ---
     GLuint frameBuffer, texColorBuffer, rboDepthStencil;
     glGenFramebuffers(1, &frameBuffer); glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 
+    //Creates a texture to draw onto to affect the whole screen
     glGenTextures(1, &texColorBuffer);
     glBindTexture(GL_TEXTURE_2D, texColorBuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -159,15 +165,9 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // --- Draw Grid ---
-        gridShader.use();
         glm::mat4 view = cam.GetViewMatrix();
-        gridShader.setMat4("view", view);
-        gridShader.setMat4("model", glm::mat4(1.0f));
-
-        glBindVertexArray(gridVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
-
+        gridMesh.Draw(gridShader, view);
+        
         // --- Draw Scene ---
         sceneShader.use();
         sceneShader.setMat4("view", view);
@@ -175,7 +175,7 @@ int main() {
 
         // Draw your scene objects here...
 
-        // ---------- Post-processing / Screen Quad ----------
+        // ---------- Post-processing / Screen Quad ----------      
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
 
@@ -185,7 +185,7 @@ int main() {
         glBindVertexArray(vaoQuad);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
@@ -196,55 +196,14 @@ int main() {
     glDeleteRenderbuffers(1, &rboDepthStencil);
     glDeleteTextures(1, &texColorBuffer);
     glDeleteFramebuffers(1, &frameBuffer);
+    glDeleteBuffers(1, &eboQuad);
 
     glDeleteBuffers(1, &vboQuad);
     glDeleteVertexArrays(1, &vaoQuad);
 
-    glDeleteBuffers(1, &gridVBO);
-    glDeleteVertexArrays(1, &gridVAO);
+    gridMesh.Deletion();
 
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
 }
-/*
-*
-1) Headers
-    Include headers for OpenGL, GLFW, GLEW, GLM, SOIL, and Windows.
-2) Initialization
-    Start a timer with std::chrono
-    Initialize GLFW and request an OpenGL 3.3 core profile context
-        Create a window and make its OpenGL context current
-    Initialize GLEW for OpenGL extension management
-
-    Enable depth testing (GL_DEPTH_TEST) and stencil testing (GL_STENCIL_TEST
-3) Vertex Data
-   Define vertex data for a cube and a floor (position, color, texture coordinates
-   Generate VAOs (vertex array object) and bind it.
-   Generate VBOs (vertex buffer object), bind it, and upload vertex data.
- (element buffer object), bind it, and upload element indices (not used in drawing).
-4) Shaders
-    Write and compile our vertex shaders (handles positions, colors, and matrices).
-        For scene vs. screen, and from various objects (grid lines) to our cubes shaders
-    Write and compile our fragment shaders (mixes two textures and outputs color).
-        same as above
-    Link shaders into a shader program and check for errors.
-    Get attribute locations (position, color, texcoord) and configure them with glVertexAttribPointer.
-    Enable vertex attributes in the VAO.
-5) Textures
-    Load two textures (cat.png, puppy.png) with SOIL, bind them to texture units 0 and 1, and set parameters.
-6) Transformations
-    Get uniform locations (model, view, proj, overrideColor) and upload view/projection matrices.
-7) Main loop: drawing, clearing, updating
-    Enter the main render loop:
-        Clear color, depth, and stencil buffers.
-        Update the model matrix to rotate the cube over time.
-        Draw the cube (glDrawArrays with 36 vertices).
-        Draw Reflection Quad
-        Draw grid lines
-        Configure stencil buffer, draw the floor, then draw the cube’s reflection with inverted Z and darker color.
-        Swap buffers and poll for input events.
-8) Clean Up
-    delete shaders, program, buffers, VAO, and destroy the window.
-    Terminate GLFW and exit.
-*/

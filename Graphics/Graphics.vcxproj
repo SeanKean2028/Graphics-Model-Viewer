@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClCompile Include="image_DXT.c" />
     <ClCompile Include="image_helper.c" />
+    <ClCompile Include="Mesh.h" />
     <ClCompile Include="SOIL.c" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="stb_image_aug.c" />
