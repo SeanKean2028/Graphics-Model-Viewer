@@ -78,30 +78,18 @@ int main() {
 
     VertexShader screenVert("GLSLs/screenVertexSource.glsl", GL_VERTEX_SHADER); FragmentShader screenFrag("GLSLs/screenFragmentSource.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram screenShader(screenVert, screenFrag);
+    screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "position", (void*)0);
+    screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "texcoord", (void*)(2 * sizeof(GLfloat)));
 
     VertexShader gridVert("GLSLs/GridVertex.glsl", GL_VERTEX_SHADER); FragmentShader gridFrag("GLSLs/GridFragment.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram gridShader(gridVert, gridFrag);
 
     // --- VAOs/VBOs ---
-    GLuint vaoQuad, vboQuad, eboQuad;
-    glGenVertexArrays(1, &vaoQuad);
-    glGenBuffers(1, &vboQuad);
-    glGenBuffers(1, &eboQuad);
+    Mesh quadMesh = Mesh(quadVertices, 4, 4, quadIndices, 6);
+    screenShader.use();
+    screenShader.setInt("screenTexture", 0);
+    quadMesh.GenerateEboQuads(screenShader);
 
-    glBindVertexArray(vaoQuad);
-
-    // Vertex buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vboQuad);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
-    // Element/index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboQuad);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quadIndices), quadIndices, GL_STATIC_DRAW);
-
-    // Attributes
-    screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "position", (void*)0);
-    screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "texcoord", (void*)(2 * sizeof(GLfloat)));
-    screenShader.SetAttributePointers();
 
     //Generate Meshes VAO, VBO, and Attribute pointers
     Mesh gridMesh = Mesh(groundVertices,  8, 6);
@@ -176,17 +164,7 @@ int main() {
         // Draw your scene objects here...
 
         // ---------- Post-processing / Screen Quad ----------      
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
-
-        screenShader.use();
-        screenShader.setInt("selector", curSelector);
-
-        glBindVertexArray(vaoQuad);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        quadMesh.DrawEBO(screenShader, curSelector, texColorBuffer);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -196,12 +174,9 @@ int main() {
     glDeleteRenderbuffers(1, &rboDepthStencil);
     glDeleteTextures(1, &texColorBuffer);
     glDeleteFramebuffers(1, &frameBuffer);
-    glDeleteBuffers(1, &eboQuad);
-
-    glDeleteBuffers(1, &vboQuad);
-    glDeleteVertexArrays(1, &vaoQuad);
 
     gridMesh.Deletion();
+    quadMesh.EBODeletion();
 
     glfwDestroyWindow(window);
     glfwTerminate();

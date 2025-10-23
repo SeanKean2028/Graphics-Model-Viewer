@@ -23,7 +23,8 @@ public:
     int floatsPerVertex;
     //Textures 
     float *textures; 
-    
+    int indexCount = 0;
+
     //Vertex Array Object; Vertex Buffer Object
     GLuint VAO,VBO = 0;
     
@@ -44,8 +45,8 @@ public:
     }
 
     //Constructor used if using an element buffer
-    Mesh(float *_vertices, unsigned int*_indices) {
-        vertices = _vertices; indices = _indices;
+    Mesh(float* _vertices, int _vertexCount, int _floatsPerVertex, unsigned int* _indices, int _indiceSize) {
+        vertices = _vertices; indices = _indices; vertexCount = _vertexCount; floatsPerVertex = _floatsPerVertex; indexCount = _indiceSize;
     }
     void AddAttributePointer(VertexAttribute vertexAttribute) {
         attributes.push_back(vertexAttribute);
@@ -67,6 +68,28 @@ public:
         }
 
     }
+    void GenerateEboQuads(ShaderProgram& shader) {
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+        glGenBuffers(1, &EBO);
+
+        glBindVertexArray(VAO);
+
+        // Vertex buffer
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertexCount * floatsPerVertex * sizeof(float),
+            vertices, GL_STATIC_DRAW);
+
+        // Element buffer (indices)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int),
+            indices, GL_STATIC_DRAW);
+
+        // Setup attributes for position/texcoords (2+2)
+        shader.SetAttributePointers();
+
+        glBindVertexArray(0);
+    }
     void Draw(ShaderProgram& shader, glm::mat4 viewMatrix) {
         // --- Draw Grid ---
         shader.use();
@@ -79,21 +102,29 @@ public:
         glBindVertexArray(0);   
     }
     void DrawEBO(ShaderProgram& shader, int ppSelector, GLuint texColorBuffer) {
-        // ---------- Post-processing / Screen Quad ----------      
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glDisable(GL_DEPTH_TEST);
 
         shader.use();
         shader.setInt("selector", ppSelector);
+        shader.setInt("screenTexture", 0); // ensure sampler = 0
 
-        glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
     void Deletion() {
         glDeleteBuffers(1, &VBO);
         glDeleteVertexArrays(1, &VAO);
+    }
+    void EBODeletion() {
+        glDeleteBuffers(1, &EBO);
+
+        glDeleteBuffers(1, &VBO);
+        glDeleteVertexArrays(1, &VAO);
+
     }
 };  
