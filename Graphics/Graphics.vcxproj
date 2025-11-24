@@ -108,13 +108,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\\External Resources\\glm;..\External Resources\\GLEW\\glew-2.1.0\\include;..\External Resources\\SOIL;..\External Resources\\GLFW\\glfw-3.4.bin.WIN64\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\External Resources\\glm;..\External Resources\\GLEW\\glew-2.1.0\\include;..\External Resources\\SOIL;..\External Resources\\GLFW\\glfw-3.4.bin.WIN64\\include;..\External Resources\\Assimp\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\External Resources\\GLEW\\glew-2.1.0\\lib\\Release\\x64;..\External Resources\\glm;V:\Graphics\External Resources\GLFW\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\External Resources\\GLEW\\glew-2.1.0\\lib\\Release\\x64;..\External Resources\\glm;..\External Resources\\GLFW\\glfw-3.4.bin.WIN64\\lib-vc2022;..\External Resources\\Assimp;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -125,13 +125,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\\External Resources\\glm;..\External Resources\\GLEW\\glew-2.1.0\\include;..\External Resources\\SOIL;..\External Resources\\GLFW\\glfw-3.4.bin.WIN64\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\External Resources\\glm;..\External Resources\\GLEW\\glew-2.1.0\\include;..\External Resources\\SOIL;..\External Resources\\GLFW\\glfw-3.4.bin.WIN64\\include;..\External Resources\\Assimp\\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\External Resources\\GLEW\\glew-2.1.0\\lib\\Release\\x64;..\External Resources\\glm;V:\Graphics\External Resources\GLFW\glfw-3.4.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\External Resources\\GLEW\\glew-2.1.0\\lib\\Release\\x64;..\External Resources\\glm;..\External Resources\\GLFW\\glfw-3.4.bin.WIN64\\lib-vc2022;..\External Resources\\Assimp;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

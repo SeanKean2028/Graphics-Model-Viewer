@@ -1,13 +1,28 @@
-﻿#define GLEW_STATIC
+﻿//GLEW
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+//Graphic Library Maths vectors, matrices, etc.
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+
+//Importing Textures
+#include <SOIL.h>
+
+//Window Creator
+#include <Windows.h>
+
+//Assimp Headers
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+//Common Helper Libraries
 #include <iostream>
 #include <chrono>
-#include <SOIL.h>
-#include <Windows.h>
+#include <filesystem>
 
 //Sean Made Headers
 #include "ShaderObj.h"
@@ -66,6 +81,17 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
 
+    // --- Assimp initialization ---
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile("model.obj",
+        aiProcess_Triangulate | aiProcess_FlipUVs);
+    if (!scene)
+    {
+        printf("Assimp error: %s\n", importer.GetErrorString());
+    }
+
+    printf("Model loaded!\n");
+
     // --- Camera ---
     Camera cam(window);
     cam.SetCamera(window);
@@ -84,7 +110,7 @@ int main() {
     VertexShader gridVert("GLSLs/GridVertex.glsl", GL_VERTEX_SHADER); FragmentShader gridFrag("GLSLs/GridFragment.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram gridShader(gridVert, gridFrag);
 
-    // --- VAOs/VBOs ---
+    //Quad Meshes
     Mesh quadMesh = Mesh(quadVertices, 4, 4, quadIndices, 6);
     screenShader.use();
     screenShader.setInt("screenTexture", 0);

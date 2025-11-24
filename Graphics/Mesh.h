@@ -37,7 +37,7 @@ public:
     // Store vertex count (number of vertices, not floats)
 
     // Constructor:
-    Mesh(float* _vertices, int _vertexCount, int _floatsPerVertex)
+    Mesh(float* _vertices, int  _vertexCount, int _floatsPerVertex)
     {
         vertices = _vertices;
         vertexCount = _vertexCount;
