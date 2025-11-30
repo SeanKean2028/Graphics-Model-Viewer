@@ -30,7 +30,6 @@ public:
 		ss << file.rdbuf();
 		std::string codeStr = ss.str();
 		const char* code = codeStr.c_str();
-		cout << codeStr;
 		// Create and compile shader
 		GLuint shader = glCreateShader(type);
 		glShaderSource(shader, 1, &code, nullptr);

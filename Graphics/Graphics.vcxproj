@@ -150,6 +150,7 @@
     <ClInclude Include="C:\Users\14025\Downloads\soil-master\soil-master\inc\SOIL\stbi_DDS_aug_c.h" />
     <ClInclude Include="C:\Users\14025\Downloads\soil-master\soil-master\inc\SOIL\stb_image_aug.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderObj.h" />
     <ClInclude Include="ShaderProgram.h" />

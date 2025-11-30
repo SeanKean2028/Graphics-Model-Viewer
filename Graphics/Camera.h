@@ -10,7 +10,7 @@
 #include <Windows.h>
 
 class Camera {
-
+public:
     glm::vec3 direction;
     bool firstMouse;
     float lastX;
