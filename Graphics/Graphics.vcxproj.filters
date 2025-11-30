@@ -51,6 +51,9 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Sphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C:\Users\14025\Downloads\soil-master\soil-master\inc\SOIL\SOIL.h">
@@ -84,6 +87,9 @@
       <Filter>Source Files\Renderer\Shaders</Filter>
     </ClInclude>
     <ClInclude Include="Model.h">
+      <Filter>Source Files\Renderer\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
       <Filter>Source Files\Renderer\Models</Filter>
     </ClInclude>
   </ItemGroup>

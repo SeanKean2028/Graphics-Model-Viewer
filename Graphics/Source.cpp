@@ -36,6 +36,7 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "Sphere.h"
 using namespace std;
 #pragma region Funcs
 //Call on Camera move
@@ -48,7 +49,9 @@ float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 float scalingValue = 1;
 float angleValue = 0;
+float ambientLighting = 1;
 glm::vec3 rotationVector = glm::vec3(0,1,0);
+glm::vec3 lightPos = glm::vec3(0,1,0);
 #pragma region Vertices
 // Quad vertices For post Processing
 GLfloat quadVertices[] = {
@@ -110,6 +113,8 @@ void PrintHelp() {
     cout << "    Rotating: To rotate a model on the x-axis type 'rotationx' " << endl;
     cout << "    Rotating: To rotate a model on the y-axis type 'rotationy' " << endl;
     cout << "    Rotating: To rotate a model on the z-axis type 'rotationz' " << endl;
+    cout << "    Ambient Lighting: To change the ambient lighting intenstity type 'alight' " << endl;
+    cout << "    Move Light: To move point light: 'movel' " << endl;
     cout << "    Clearing: To clear screen type 'cls' " << endl;
 }
 #pragma endregion Vertices
@@ -155,6 +160,9 @@ int main() {
     VertexShader modelVert("GLSLs/ModelVertex.glsl", GL_VERTEX_SHADER); FragmentShader modelFrag("GLSLs/ModelFragment.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram modelShader(modelVert, modelFrag);
    
+
+    VertexShader lightVert("GLSLs/LightVertex.glsl", GL_VERTEX_SHADER); FragmentShader lightFrag("GLSLs/LightFragment.glsl", GL_FRAGMENT_SHADER);
+    ShaderProgram lightShader(lightVert, lightFrag);
     // --- Quad Mesh for Post Processing ---
     Mesh quadMesh = Mesh(quadVertices, 4, 4, quadIndices, 6);
     screenShader.use();
@@ -187,7 +195,16 @@ int main() {
 
     // --- Loading Test Model ---
     cout << "Loading Model From: " << path;
+    modelShader.use();
     Model testModel(path);
+
+    // --- Light Sphere ---
+    lightShader.use();
+    lightShader.setVec3("color", glm::vec3(1, 1, 1));
+    lightShader.setBool("useTexture", false);
+    Sphere sphere(0.5f, 12, 12);
+    vector<Texture> nullTextVec;
+    Mesh lightSphere(sphere.verticesMesh, sphere.indices, nullTextVec);
 
     // --- Framebuffer for post-processing ---
     GLuint frameBuffer, texColorBuffer, rboDepthStencil;
@@ -261,6 +278,44 @@ int main() {
                     rotationVector = glm::vec3(0, 0, 1);
                     cout << "Rotating Model on the z-axis: " << angleValue << " degrees" << endl;
                 }
+                else if (input == "alight") {
+                    cout << "Enter Light intenstiy Between 0 & 1: " << endl;
+                    float val;
+                    while (!(cin >> val) || val < 0 || val > 1)
+                    {
+                        cout << "ENTER VALUE BETWEEN 0 & 1: " << endl;
+                        cin.clear();
+                        cin.ignore(INT_MAX, '\n');
+                    }
+                    ambientLighting = val;
+                    cout << "Ambient Light Changing to: " << ambientLighting << endl;
+                }
+                else if (input == "movel") {
+                    float transY;
+                    float transX;
+                    float transZ;
+
+                    cout << "Enter Translation x: " << endl;
+                    while (!(cin >> transX)) {
+                        cout << "ENTER FLOAT VALUE: " << endl;
+                        cin.clear();
+                        cin.ignore(INT_MAX, '\n');
+                    }
+                    cout << "Enter Translation y: " << endl;
+                    while (!(cin >> transY)) {
+                        cout << "ENTER FLOAT VALUE: " << endl;
+                        cin.clear();
+                        cin.ignore(INT_MAX, '\n');
+                    }                    
+                    cout << "Enter Translation z: " << endl;
+                    while (!(cin >> transZ)) {
+                        cout << "ENTER FLOAT VALUE: " << endl;
+                        cin.clear();
+                        cin.ignore(INT_MAX, '\n');
+                    }
+                    lightPos = glm::vec3(transX, transY, transZ);
+                    cout << "Moving light up to: " << "(" << transX << ", " <<  transY << ", " << transZ << ")" << endl;
+                }
                 else if (input == "help") {
                     PrintHelp();
                 }
@@ -314,18 +369,30 @@ int main() {
         glm::mat4 testModelModel = glm::mat4(1.0f);
         testModelModel = glm::scale(testModelModel, glm::vec3(scalingValue));
         testModelModel = glm::rotate(testModelModel, glm::radians(angleValue), rotationVector);
+
         modelShader.setMat4("model", testModelModel);
         modelShader.setMat4("view", view);
         modelShader.setMat4("projection", proj);
         modelShader.setInt("texture_diffuse1", 0);
         modelShader.setInt("texture_specular1", 1);
-        modelShader.setVec3("lightPos", glm::vec3(0, 0, 0));
-        modelShader.setVec3("viewPos", cam.cameraPos);
-        modelShader.setFloat("u_time", glfwGetTime());
+        modelShader.setVec3("lightPos", lightPos);
+
+        glm::vec4 _ambientLight = glm::vec4(ambientLighting, ambientLighting, ambientLighting, 1);
+        modelShader.setVec4("ambientLight", _ambientLight);
 
         // Set your solid color
         modelShader.setVec3("aColor", glm::vec3(1, 1, 1)); // Red
         testModel.Draw(modelShader);
+
+        glm::mat4 lightSphereModel = glm::mat4(1.0f);
+        lightSphereModel = glm::translate(lightSphereModel, lightPos);
+        lightShader.use();
+        lightShader.setMat4("model", lightSphereModel);
+        lightShader.setMat4("view", view);
+        lightShader.setMat4("projection", proj);
+        lightShader.setVec3("color", glm::vec3(1, 0, 0));
+        lightSphere.DrawMesh(lightShader);
+
         //Set uniforms
         gridShader.use();
         gridShader.setMat4("view", view);
