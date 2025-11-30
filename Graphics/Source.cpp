@@ -93,19 +93,16 @@ string modelPath() {
     }
 
     switch (num) {
-    case 1:
-        scalingValue = 1;
-        return "Models/Car/Car.obj";
-        break;
-    case 2:
-        return "Models/Tree/dead_tree_rt_1.obj";
-        break;
-    case 3:
-        rotationVector = glm::vec3(1, 0, 0);
-        angleValue = -90;
-        return "Models/Player/Model.fbx";
-        break;
-    }
+        case 1:
+            scalingValue = 1;
+            return "Models/Car/Car.obj";
+        case 2:
+            return "Models/Tree/dead_tree_rt_1.obj";
+        case 3:
+            rotationVector = glm::vec3(1, 0, 0);
+            angleValue = -90;
+            return "Models/Player/Model.fbx";
+        }
 }
 void PrintHelp() {
     cout << "Sean's 3D Model Viewer Command List!" << endl;
