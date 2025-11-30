@@ -1,0 +1,67 @@
+﻿  Source.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared\minwindef.h(130,9): warning C4005: 'APIENTRY': macro redefinition
+  (compiling source file 'Source.cpp')
+      V:\Graphics Model Viewer\External Resources\GLFW\glfw-3.4.bin.WIN64\include\GLFW\glfw3.h(123,11):
+      see previous definition of 'APIENTRY'
+  
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\filesystem(12): warning STL4038: The contents of <filesystem> are available only with C++17 or later.
+V:\Graphics Model Viewer\Graphics\Camera.h(53,21): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Camera.h(54,21): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Camera.h(62,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Camera.h(63,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Camera.h(64,17): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Camera.h(65,17): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Camera.h(133,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Camera.h(134,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Mesh.h(60,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Mesh.h(88,34): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Mesh.h(150,35): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Mesh.h(152,39): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Mesh.h(172,35): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Mesh.h(174,39): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Sphere.h(34,26): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Sphere.h(35,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Sphere.h(41,33): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Sphere.h(88,20): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Sphere.h(89,35): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  (compiling source file 'Source.cpp')
+  
+V:\Graphics Model Viewer\Graphics\Source.cpp(238,28): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+V:\Graphics Model Viewer\Graphics\Source.cpp(106,1): warning C4715: 'modelPath': not all control paths return a value
+  Graphics.vcxproj -> V:\Graphics Model Viewer\x64\Debug\Graphics.exe
