@@ -95,13 +95,13 @@ string modelPath() {
     switch (num) {
         case 1:
             scalingValue = 1;
-            return "Models/Car/Car.obj";
+            return "Assets/Models/Car/Car.obj";
         case 2:
-            return "Models/Tree/dead_tree_rt_1.obj";
+            return "Assets/Models/Tree/dead_tree_rt_1.obj";
         case 3:
             rotationVector = glm::vec3(1, 0, 0);
             angleValue = -90;
-            return "Models/Player/Model.fbx";
+            return "Assets/Models/Player/Model.fbx";
         }
 }
 void PrintHelp() {
@@ -125,7 +125,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "ShaderProgram Test", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "ShaderProgram Test", nullptr, nullptr);
     if (!window) { cerr << "Failed to create GLFW window\n"; glfwTerminate(); return -1; }
     glfwMakeContextCurrent(window);
 
@@ -143,22 +143,22 @@ int main() {
     glfwSetCursorPosCallback(window, CameraCallback);
 
     // --- Shaders ---
-    VertexShader sceneVert("GLSLs/sceneVertexSource.glsl", GL_VERTEX_SHADER); FragmentShader sceneFrag("GLSLs/sceneFragmentSource.glsl", GL_FRAGMENT_SHADER);
+    VertexShader sceneVert("Assets/GLSLs/sceneVertexSource.glsl", GL_VERTEX_SHADER); FragmentShader sceneFrag("Assets/GLSLs/sceneFragmentSource.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram sceneShader(sceneVert, sceneFrag);
 
-    VertexShader screenVert("GLSLs/screenVertexSource.glsl", GL_VERTEX_SHADER); FragmentShader screenFrag("GLSLs/screenFragmentSource.glsl", GL_FRAGMENT_SHADER);
+    VertexShader screenVert("Assets/GLSLs/screenVertexSource.glsl", GL_VERTEX_SHADER); FragmentShader screenFrag("Assets/GLSLs/screenFragmentSource.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram screenShader(screenVert, screenFrag);
     screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "position", (void*)0);
     screenShader.AddAttributePointer(2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), "texcoord", (void*)(2 * sizeof(GLfloat)));
 
-    VertexShader gridVert("GLSLs/GridVertex.glsl", GL_VERTEX_SHADER); FragmentShader gridFrag("GLSLs/GridFragment.glsl", GL_FRAGMENT_SHADER);
+    VertexShader gridVert("Assets/GLSLs/GridVertex.glsl", GL_VERTEX_SHADER); FragmentShader gridFrag("Assets/GLSLs/GridFragment.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram gridShader(gridVert, gridFrag);
     
-    VertexShader modelVert("GLSLs/ModelVertex.glsl", GL_VERTEX_SHADER); FragmentShader modelFrag("GLSLs/ModelFragment.glsl", GL_FRAGMENT_SHADER);
+    VertexShader modelVert("Assets/GLSLs/ModelVertex.glsl", GL_VERTEX_SHADER); FragmentShader modelFrag("Assets/GLSLs/ModelFragment.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram modelShader(modelVert, modelFrag);
    
 
-    VertexShader lightVert("GLSLs/LightVertex.glsl", GL_VERTEX_SHADER); FragmentShader lightFrag("GLSLs/LightFragment.glsl", GL_FRAGMENT_SHADER);
+    VertexShader lightVert("Assets/GLSLs/LightVertex.glsl", GL_VERTEX_SHADER); FragmentShader lightFrag("Assets/GLSLs/LightFragment.glsl", GL_FRAGMENT_SHADER);
     ShaderProgram lightShader(lightVert, lightFrag);
     // --- Quad Mesh for Post Processing ---
     Mesh quadMesh = Mesh(quadVertices, 4, 4, quadIndices, 6);
@@ -180,7 +180,7 @@ int main() {
     gridMesh.AddAttributePointer(gridTexCoordinateAttribute);
 
     gridShader.use();
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 20000.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), 1920.0f / 1080, 0.1f, 20000.0f);
     //Set up Grid Mesh shader values
     gridShader.setMat4("projection", proj);
     gridShader.setFloat("cellSize", 1.0f);           // each grid cell 1 unit wide
@@ -209,14 +209,14 @@ int main() {
     //Creates a texture to draw onto to affect the whole screen
     glGenTextures(1, &texColorBuffer);
     glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1920, 1080, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
 
     glGenRenderbuffers(1, &rboDepthStencil);
     glBindRenderbuffer(GL_RENDERBUFFER, rboDepthStencil);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1920, 1080);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboDepthStencil);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
